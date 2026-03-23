@@ -10,10 +10,8 @@ Esta carpeta documenta **qué tipo de salidas** se obtuvieron del asistente de I
 |------|----------------------|--------|
 | Contrato OpenAPI | `src/main/resources/openapi/openapi.yaml` | Editado y validado manualmente; la IA aportó borradores. |
 | Código desde OpenAPI | `target/generated-sources/openapi/` (tras `mvn compile`) | **No versionado** en Git; se regenera en cada build. Paquetes típicos: `...generated.api`, `...generated.model`. |
-| Código de aplicación | `src/main/java/...` | Escrito o refactorizado con asistencia; **revisión humana** obligatoria. |
 | Tests | `src/test/java/...` | Plantillas y casos sugeridos por IA; aserciones y datos ajustados manualmente. |
 | Config calidad | `pom.xml`, `config/checkstyle/`, `config/spotbugs/` | Fragmentos sugeridos; integración verificada con `mvn verify`. |
-| Docker | `Dockerfile`, `docker-compose.yml` | Iterados hasta build estable. |
 
 ---
 
