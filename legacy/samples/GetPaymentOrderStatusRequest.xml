@@ -1,3 +1,0 @@
-<GetPaymentOrderStatusRequest xmlns="http://legacy.bank/payments">
-  <paymentOrderId>PO-0001</paymentOrderId>
-</GetPaymentOrderStatusRequest>
