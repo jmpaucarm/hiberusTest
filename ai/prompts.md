@@ -1,7 +1,7 @@
 # Registro de prompts — uso asistido de IA (prueba técnica)
 
 **Proyecto:** `payment-initiation-service`  
-**Herramienta:** asistente de código en IDE (modelo conversacional, sesiones iterativas).  
+**Herramienta:**  Cursor asistente de código en IDE (modelo conversacional, sesiones iterativas).  
 **Nota:** Los textos siguientes son **resúmenes fieles al intento** de cada interacción; no constituyen transcripción literal completa por límites de contexto y privacidad.
 
 ---
@@ -12,7 +12,30 @@
 
 **Prompt (resumen):**
 
-> Tengo un WSDL de legado en `legacy/PaymentOrderService.wsdl`. Identifica el `portType`, las operaciones SOAP, los elementos de request/response y el mapeo de tipos XSD (string, decimal, date, dateTime). Resume qué capacidad de negocio representa cada operación y qué campos son obligatorios vs opcionales.
+> Tu tarea es:
+1. Identificar operaciones SOAP, request/response, campos relevantes y estados.
+2. Detectar qué conceptos del SOAP equivalen a:
+   - payment order
+   - payment order status
+   - identifiers
+   - amount
+   - currency
+   - debtor
+   - creditor
+   - execution date
+   - status
+3. Proponer un mapping SOAP -> REST -> dominio.
+4. Indicar ambigüedades o campos que deban simplificarse.
+5. Proponer nombres REST y de dominio coherentes con BIAN.
+6. Sugerir un modelo mínimo suficiente para la prueba técnica, evitando sobreingeniería.
+
+Devuélveme:
+- Resumen del WSDL
+- Tabla de mapping
+- Propuesta de recursos REST
+- Propuesta de estados de negocio
+- Riesgos o supuestos
+- Recomendación final para el openapi.yaml
 
 **Contexto adjunto:** fragmento o ruta al archivo WSDL (operaciones `SubmitPaymentOrder`, `GetPaymentOrderStatus`).
 
