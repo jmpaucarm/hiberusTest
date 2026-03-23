@@ -323,35 +323,9 @@ La correspondencia es **conceptual**: el contrato nombra explícitamente la alin
 
 ---
 
-## 5. Estructura del proyecto
 
-```text
-src/main/java/com/hiberius/paymentinitiation/
-├── PaymentInitiationApplication.java
-├── domain/                    # Modelo de dominio y excepciones de negocio
-│   ├── exception/
-│   └── model/
-├── application/               # Casos de uso (servicios de aplicación)
-│   ├── exception/
-│   └── service/
-├── port/
-│   ├── in/                    # Puertos entrantes (use cases)
-│   └── out/                   # Puertos salientes (repositorio, generador de IDs)
-├── adapter/
-│   ├── in/web/                # REST: controlador, mapeo API, manejo de errores
-│   └── out/persistence/       # Implementación en memoria
-└── config/
 
-src/main/resources/
-├── application.yml
-└── openapi/openapi.yaml       # Contrato OpenAPI (fuente para generación)
-
-target/generated-sources/openapi/   # Código generado (no editar a mano)
-```
-
----
-
-## 6. Ejecución local
+## 5. Ejecución local
 
 **Requisitos:** JDK **17** (o compatible con el `release` del `pom.xml`), **Maven 3.8+**.
 
@@ -392,11 +366,11 @@ java -jar target/payment-initiation-service-1.0.0-SNAPSHOT.jar --server.port=808
 
 ---
 
-## 7. Ejecución con Docker
+## 6. Ejecución con Docker
 
 **Requisitos:** Docker Engine y Docker Compose v2 (plugin `docker compose`).
 
-### 7.1. Con Docker Compose (recomendado)
+### 6.1. Con Docker Compose (recomendado)
 
 Desde la **raíz del repositorio** (junto a `docker-compose.yml`):
 
@@ -414,7 +388,7 @@ docker compose up --build -d
 docker compose down
 ```
 
-### 7.2. Solo imagen Docker (sin Compose)
+### 6.2. Solo imagen Docker (sin Compose)
 
 ```bash
 docker build -t hiberius/payment-initiation-service:local .
@@ -425,7 +399,7 @@ Multi-stage build, usuario no root y variables: `Dockerfile` y `docker-compose.y
 
 ---
 
-## 8. Cómo correr tests
+## 7. Cómo correr tests
 
 ```bash
 mvn test
@@ -441,7 +415,7 @@ mvn test -Dtest=PaymentOrderWebTestClientIntegrationTest
 
 ---
 
-## 9. Verificar calidad de código
+## 8. Verificar calidad de código
 
 Ejecutar la verificación **completa** del proyecto: tests, informe **JaCoCo**, umbral de cobertura, **Checkstyle** y **SpotBugs** (según `pom.xml`).
 
@@ -469,7 +443,7 @@ También puedes abrir manualmente el archivo `target/site/jacoco/index.html` des
 
 ---
 
-## 10. Cobertura y calidad
+## 9. Cobertura y calidad
 
 | Herramienta | Rol |
 |-------------|-----|
@@ -483,7 +457,7 @@ Ajustar umbrales o exclusiones solo con criterio justificado (falsos positivos, 
 
 ---
 
-## 11. Uso de herramientas de IA
+## 10. Uso de herramientas de IA
 
 En el desarrollo de esta prueba se utilizó asistencia de **IA generativa** (p. ej. en el IDE) para:
 
@@ -496,12 +470,11 @@ El diseño (hexagonal, contract-first, BIAN), las **reglas de dominio** y la **c
 
 ---
 
-## 12. Mejoras futuras
+## 11. Mejoras futuras
 
 - **Persistencia real** (PostgreSQL, etc.) y migraciones (**Flyway/Liquibase**).
 - **Idempotencia** en creación (clave de idempotencia por `externalReference` o header dedicado).
 - **Seguridad:** OAuth2/JWT, mTLS o API keys según entorno.
-- **Observabilidad:** correlación de trazas (**Micrometer/OpenTelemetry**), métricas de negocio.
 - **Resiliencia:** timeouts y circuit breakers en llamadas salientes (cuando existan).
 - **Paginación y filtros** en listados si el producto lo exige.
 - **Pruebas de contrato** consumidor/proveedor (p. ej. Spring Cloud Contract) sobre el OpenAPI publicado.
