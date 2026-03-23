@@ -1,8 +1,258 @@
 # Payment Initiation Service
 
-Microservicio **contract-first** para **iniciación y consulta de órdenes de pago**, alineado conceptualmente con el dominio **BIAN Payment Initiation** y el recurso de negocio **Payment Order**. Implementado en **Java 17** y **Spring Boot 3** como entrega de prueba técnica.
+Microservicio **REST** para **Payment Initiation** siguiendo el marco **BIAN** ([Banking Industry Architecture Network](https://bian.org/)), **migrado desde un servicio SOAP legado** en sentido conceptual: el contrato OpenAPI modela las mismas capacidades de negocio (envío y consulta de órdenes) con **HTTP**, **JSON** y **OpenAPI** en lugar de XML/WSDL.
 
-**Contenido del README:** [contexto](#1-contexto-del-problema) · [arquitectura](#2-decisiones-de-arquitectura) · [migración (etapa inicial → REST)](#3-contexto-y-decisiones-de-migración-desde-la-etapa-inicial) · [BIAN](#4-alineación-con-bian-payment-initiation--payment-order) · [estructura](#5-estructura-del-proyecto) · [ejecución local](#6-ejecución-local) · [Docker](#7-ejecución-con-docker) · [tests](#8-cómo-correr-tests) · [`mvn verify`](#9-cómo-correr-mvn-verify) · [cobertura](#10-cobertura-y-calidad)
+Implementación **contract-first** en **Java 17** y **Spring Boot 3** (`spring-boot-starter-web`), con persistencia **en memoria** para la entrega.
+
+**Contenido del README:** [vista rápida](#vista-rápida) · [URLs](#urls-de-la-aplicación-local) · [ejemplos de uso](#ejemplos-de-uso) · [contexto](#1-contexto-del-problema) · [arquitectura](#2-decisiones-de-arquitectura) · [migración](#3-contexto-y-decisiones-de-migración-desde-la-etapa-inicial) · [BIAN](#4-alineación-con-bian-payment-initiation--payment-order) · [estructura](#5-estructura-del-proyecto) · [ejecución local](#6-ejecución-local) · [Docker](#7-ejecución-con-docker) · [tests](#8-cómo-correr-tests) · [verificar calidad](#9-verificar-calidad-de-código) · [cobertura](#10-cobertura-y-calidad)
+
+---
+
+## Vista rápida
+
+### Contexto del proyecto
+
+Este proyecto representa la **migración** de un flujo de **órdenes de pago** expuesto históricamente como **SOAP** hacia un **microservicio REST** moderno, alineado con estándares bancarios de referencia (**BIAN**) y con errores HTTP homogéneos (**RFC 7807**).
+
+| Concepto BIAN | Valor en esta solución |
+|---------------|-------------------------|
+| **Service Domain** | **Payment Initiation** — captura y validación de la instrucción de pago. |
+| **Business object / recurso** | **Payment Order** — agregado principal del API (`PaymentOrder` en dominio). |
+
+### Endpoints REST
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| `POST` | `/payment-initiation/payment-orders` | Crear una nueva orden de pago |
+| `GET` | `/payment-initiation/payment-orders/{paymentOrderId}` | Consultar el detalle de una orden |
+| `GET` | `/payment-initiation/payment-orders/{paymentOrderId}/status` | Consultar solo el estado (vista reducida) |
+
+Contrato detallado: `src/main/resources/openapi/openapi.yaml`.
+
+### Arquitectura hexagonal (Ports & Adapters)
+
+El núcleo **no depende** de Spring ni de HTTP; los adaptadores implementan los puertos.
+
+```text
+src/main/java/com/hiberius/paymentinitiation/
+├── PaymentInitiationApplication.java
+├── domain/
+│   ├── exception/                    # Excepciones de dominio (p. ej. BusinessRuleViolationException)
+│   └── model/
+│       ├── PaymentOrder.java           # Agregado principal
+│       ├── PaymentOrderInitiation.java # Datos de entrada a la creación
+│       ├── PaymentOrderId.java
+│       ├── PaymentOrderStatus.java     # Ciclo de vida (enum)
+│       ├── PaymentOrderStatusSnapshot.java
+│       ├── Iban.java, Money.java, ExternalReference.java, RemittanceInfo.java
+├── port/
+│   ├── in/                           # Puertos entrantes (casos de uso)
+│   │   ├── CreatePaymentOrderUseCase.java
+│   │   ├── GetPaymentOrderUseCase.java
+│   │   └── GetPaymentOrderStatusUseCase.java
+│   └── out/
+│       ├── PaymentOrderRepository.java
+│       └── PaymentOrderIdGenerator.java
+├── application/
+│   ├── service/                      # Implementación de casos de uso
+│   │   ├── CreatePaymentOrderService.java
+│   │   ├── GetPaymentOrderService.java
+│   │   └── GetPaymentOrderStatusService.java
+│   └── exception/                    # ApplicationException, etc.
+├── adapter/
+│   ├── in/web/
+│   │   ├── PaymentOrderController.java
+│   │   ├── PaymentOrderApiMapper.java    # OpenAPI DTO ↔ dominio
+│   │   ├── GlobalExceptionHandler.java   # Problem Details RFC 7807
+│   │   └── error/                        # ProblemResponseFactory, ApiErrorCode
+│   └── out/persistence/
+│       ├── InMemoryPaymentOrderRepository.java
+│       └── SequentialPaymentOrderIdGenerator.java
+└── config/
+    └── PaymentInitiationConfiguration.java
+```
+
+Código **generado** desde OpenAPI (no editar): `target/generated-sources/openapi/`.
+
+### Stack tecnológico
+
+| Tecnología | Versión / nota | Propósito |
+|------------|----------------|-----------|
+| **Java** | 17 | Lenguaje y `release` del compilador |
+| **Spring Boot** | 3.3.6 | Framework (`spring-boot-starter-web`, validation, actuator) |
+| **OpenAPI Generator** | 7.10.0 | Generación contract-first desde `openapi.yaml` |
+| **JaCoCo** | 0.8.12 | Cobertura de tests (umbral líneas ≥ 80 % en el bundle configurado) |
+| **Checkstyle** | plugin 3.5.0 | Estilo de código (`config/checkstyle/`) |
+| **SpotBugs** | plugin 4.8.6.4 | Análisis estático |
+| **JUnit 5, AssertJ, Mockito** | vía Spring Boot test | Pruebas unitarias e integración |
+| **SpringDoc OpenAPI** | 2.6.0 | Swagger UI y JSON OpenAPI en runtime (`springdoc-openapi-starter-webmvc-ui`) |
+| **Docker** | — | Imagen multi-stage (`Dockerfile`, `docker-compose.yml`) |
+
+No se usan en este repo **Lombok**, **MapStruct**, **R2DBC** ni **PostgreSQL**; la persistencia es **solo en memoria** salvo que sustituyas el adaptador `PaymentOrderRepository`.
+
+### Estados de la orden de pago (`PaymentOrderStatus`)
+
+Valores definidos en dominio para el ciclo de vida (referencia BIAN / procesamiento posterior). En la entrega actual la creación fija el estado inicial **`RECEIVED`**; las transiciones siguientes quedarían para capas de proceso o futuras extensiones.
+
+```text
+                    ┌─────────────┐
+                    │  RECEIVED   │  ← Estado inicial al crear la orden (este servicio)
+                    └──────┬──────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │  PENDING    │  ← En cola / validación
+                    └──────┬──────┘
+                           │
+           ┌───────────────┼───────────────┐
+           ▼               ▼               ▼
+    ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+    │  ACCEPTED   │ │  REJECTED   │ │   FAILED    │
+    └──────┬──────┘ └─────────────┘ └─────────────┘
+           │
+           ▼
+    ┌─────────────┐
+    │   SETTLED   │  ← Liquidación completada (referencia)
+    └─────────────┘
+```
+
+### Arranque rápido (desarrollo in-memory)
+
+**Prerrequisitos:** Java 17+, Maven 3.8+.
+
+```bash
+git clone https://github.com/<usuario>/<repositorio>.git
+cd <repositorio>
+```
+
+```bash
+mvn clean compile   # genera código OpenAPI y compila
+mvn test            # pruebas
+mvn spring-boot:run # API en http://localhost:8080
+```
+
+No hay perfiles Spring `dev` / `local` / `docker` con base de datos: la configuración por defecto es **solo** `application.yml` (puerto 8080, memoria). Para Docker, ver [§ Ejecución con Docker](#7-ejecución-con-docker).
+
+### URLs de la aplicación (local)
+
+Con el servicio en marcha (`mvn spring-boot:run` o JAR/Docker) y **puerto por defecto 8080** (`server.port`). Si cambias el puerto, sustituye `8080` en las URLs.
+
+| Recurso | URL |
+|---------|-----|
+| **API base** | `http://localhost:8080` |
+| **Swagger UI** | `http://localhost:8080/swagger-ui.html` |
+| **OpenAPI (JSON)** | `http://localhost:8080/api-docs` |
+| **Health** | `http://localhost:8080/actuator/health` |
+
+La fuente de verdad del contrato sigue siendo `src/main/resources/openapi/openapi.yaml` (contract-first); SpringDoc expone la API descubierta por **introspección** de los controladores en ejecución.
+
+---
+
+## Ejemplos de uso
+
+Con el servicio en marcha en `http://localhost:8080`. Los identificadores internos se generan en secuencia (`PO-000001`, `PO-000002`, …) tras un arranque limpio; sustituye `{id}` por el `paymentOrderId` devuelto en el **201 Created**.
+
+**Regla de negocio:** `requestedExecutionDate` debe ser **la fecha de hoy o una fecha futura** (no puede estar en el pasado respecto al reloj del servidor).
+
+### Crear una orden de pago (`curl`)
+
+```bash
+curl -X POST http://localhost:8080/payment-initiation/payment-orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "externalReference": "EXT-2026-001",
+    "debtorAccount": {
+      "iban": "ES9121000418450200051332"
+    },
+    "creditorAccount": {
+      "iban": "DE89370400440532013000"
+    },
+    "instructedAmount": {
+      "amount": 150.75,
+      "currency": "EUR"
+    },
+    "remittanceInformation": "Factura INV-001-2026",
+    "requestedExecutionDate": "2026-12-25"
+  }'
+```
+
+**Respuesta (201 Created)** — cuerpo acotado al contrato `PaymentOrderCreationResponse` (no devuelve el detalle completo de cuentas e importe; usa `Location` para el recurso creado):
+
+```json
+{
+  "paymentOrderId": "PO-000001",
+  "externalReference": "EXT-2026-001",
+  "status": "RECEIVED",
+  "createdAt": "2026-03-22T14:30:00.123Z"
+}
+```
+
+El valor real de `createdAt` depende del reloj del servidor. El estado inicial siempre es **`RECEIVED`** (no `INITIATED`).
+
+### Consultar una orden de pago
+
+```bash
+curl http://localhost:8080/payment-initiation/payment-orders/PO-000001
+```
+
+**Respuesta (200 OK)** — ejemplo ilustrativo (`PaymentOrder` completo):
+
+```json
+{
+  "paymentOrderId": "PO-000001",
+  "externalReference": "EXT-2026-001",
+  "debtorAccount": { "iban": "ES9121000418450200051332" },
+  "creditorAccount": { "iban": "DE89370400440532013000" },
+  "instructedAmount": { "amount": 150.75, "currency": "EUR" },
+  "remittanceInformation": "Factura INV-001-2026",
+  "requestedExecutionDate": "2026-12-25",
+  "status": "RECEIVED",
+  "createdAt": "2026-03-22T14:30:00.123Z",
+  "statusChangedAt": "2026-03-22T14:30:00.123Z"
+}
+```
+
+### Consultar solo el estado
+
+```bash
+curl http://localhost:8080/payment-initiation/payment-orders/PO-000001/status
+```
+
+**Respuesta (200 OK)** — proyección `PaymentOrderStatusView` (campo **`lastUpdated`**, no `statusUpdateDateTime`):
+
+```json
+{
+  "paymentOrderId": "PO-000001",
+  "status": "RECEIVED",
+  "lastUpdated": "2026-03-22T14:30:00.123Z"
+}
+```
+
+### PowerShell (Windows)
+
+Ajusta `requestedExecutionDate` a una fecha válida (hoy o futura).
+
+```powershell
+# Crear orden de pago
+$body = @{
+    externalReference = "EXT-2026-001"
+    debtorAccount     = @{ iban = "ES9121000418450200051332" }
+    creditorAccount   = @{ iban = "DE89370400440532013000" }
+    instructedAmount  = @{ amount = 250.00; currency = "EUR" }
+    remittanceInformation = "Pago servicios"
+    requestedExecutionDate = "2026-12-31"
+} | ConvertTo-Json -Depth 5
+
+Invoke-RestMethod -Uri "http://localhost:8080/payment-initiation/payment-orders" `
+    -Method POST -Body $body -ContentType "application/json; charset=utf-8"
+```
+
+Consultas GET:
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8080/payment-initiation/payment-orders/PO-000001"
+Invoke-RestMethod -Uri "http://localhost:8080/payment-initiation/payment-orders/PO-000001/status"
+```
 
 ---
 
@@ -190,15 +440,31 @@ mvn test -Dtest=PaymentOrderWebTestClientIntegrationTest
 
 ---
 
-## 9. Cómo correr `mvn verify`
+## 9. Verificar calidad de código
 
-`verify` ejecuta el ciclo completo de calidad definido en el `pom.xml` **después** de compilar y pasar tests:
+Ejecutar la verificación **completa** del proyecto: tests, informe **JaCoCo**, umbral de cobertura, **Checkstyle** y **SpotBugs** (según `pom.xml`).
 
 ```bash
+# Verificación completa (tests + JaCoCo + Checkstyle + SpotBugs)
 mvn verify
 ```
 
-En la fase `verify` se ejecutan, entre otros: **JaCoCo check**, **Checkstyle**, **SpotBugs** (según configuración actual del proyecto).
+Si solo necesitas tests y reporte de cobertura sin el resto de comprobaciones de la fase `verify`, basta con `mvn test` (también genera `target/site/jacoco/` cuando JaCoCo está configurado en el build).
+
+**Abrir el informe HTML de cobertura** (tras `mvn test` o `mvn verify`):
+
+```bash
+# Windows (PowerShell o CMD)
+start target/site/jacoco/index.html
+
+# macOS
+open target/site/jacoco/index.html
+
+# Linux (alternativa habitual)
+xdg-open target/site/jacoco/index.html
+```
+
+También puedes abrir manualmente el archivo `target/site/jacoco/index.html` desde el explorador de archivos.
 
 ---
 
