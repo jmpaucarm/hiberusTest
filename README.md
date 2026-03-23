@@ -258,9 +258,10 @@ Invoke-RestMethod -Uri "http://localhost:8080/payment-initiation/payment-orders/
 
 ## 1. Contexto del problema
 
-En entornos bancarios y de tesorería, la **iniciación de pagos** (captura de instrucciones del cliente: cuentas, importe, fecha de ejecución, referencias) debe ser **coherente**, **trazable** y **expuesta de forma estable** a canales y sistemas aguas arriba.
-
-Este servicio modela el ciclo mínimo de una **orden de pago** (`PaymentOrder`): creación con validaciones de negocio, consulta del detalle y consulta del estado, con respuestas de error homogéneas (**RFC 7807** `application/problem+json`).
+La entidad bancaria de la localidad norte de la ciudad está en un proceso de migración de varios de sus servicios legados SOAP hacia servicios REST, los cuales estarán alineados de banca (BIAN). Este proyecto 
+para la empresa es de vital importancia, además de ser crítico dentro del proceso de modernización, porque estos servicios SOAP manejan muchos procesos core en áreas importante dentro de la entidad 
+bancaria. Por lo cual se requiere velocidad en el proceso de migración, sin perder la calidad y eficiencia de los servicios migrados, y que no afecten a los consumidores dentro del ecosistema del área de negocio; 
+de esta manera, se busca incorporar el uso de Inteligencia Artificial como asistente en el desarrollo de los nuevos servicios REST. 
 
 El alcance funcional de la prueba se centra en la API REST y en una persistencia **en memoria** con generación secuencial de identificadores, suficiente para demostrar arquitectura, contrato y calidad de código sin acoplar a un motor de base de datos concreto.
 
