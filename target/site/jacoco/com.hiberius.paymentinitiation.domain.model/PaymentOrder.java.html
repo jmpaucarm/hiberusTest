@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaymentOrder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">payment-initiation-service</a> &gt; <a href="index.source.html" class="el_package">com.hiberius.paymentinitiation.domain.model</a> &gt; <span class="el_source">PaymentOrder.java</span></div><h1>PaymentOrder.java</h1><pre class="source lang-java linenums">package com.hiberius.paymentinitiation.domain.model;
+
+import com.hiberius.paymentinitiation.domain.exception.BusinessRuleViolationException;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Optional;
+
+public final class PaymentOrder {
+
+    private final PaymentOrderId id;
+    private final ExternalReference externalReference;
+    private final Iban debtorIban;
+    private final Iban creditorIban;
+    private final Money money;
+    private final Optional&lt;RemittanceInfo&gt; remittance;
+    private final LocalDate requestedExecutionDate;
+    private PaymentOrderStatus status;
+    private final Instant createdAt;
+    private Instant statusChangedAt;
+
+    private PaymentOrder(
+            PaymentOrderId id,
+            ExternalReference externalReference,
+            Iban debtorIban,
+            Iban creditorIban,
+            Money money,
+            Optional&lt;RemittanceInfo&gt; remittance,
+            LocalDate requestedExecutionDate,
+            PaymentOrderStatus status,
+            Instant createdAt,
+<span class="fc" id="L33">            Instant statusChangedAt) {</span>
+<span class="fc" id="L34">        this.id = id;</span>
+<span class="fc" id="L35">        this.externalReference = externalReference;</span>
+<span class="fc" id="L36">        this.debtorIban = debtorIban;</span>
+<span class="fc" id="L37">        this.creditorIban = creditorIban;</span>
+<span class="fc" id="L38">        this.money = money;</span>
+<span class="fc" id="L39">        this.remittance = remittance;</span>
+<span class="fc" id="L40">        this.requestedExecutionDate = requestedExecutionDate;</span>
+<span class="fc" id="L41">        this.status = status;</span>
+<span class="fc" id="L42">        this.createdAt = createdAt;</span>
+<span class="fc" id="L43">        this.statusChangedAt = statusChangedAt;</span>
+<span class="fc" id="L44">    }</span>
+
+    /**
+     * Factory for a new payment order: applies business rules and sets initial status {@link PaymentOrderStatus#RECEIVED}.
+     */
+    public static PaymentOrder initiate(
+            PaymentOrderId id,
+            PaymentOrderInitiation initiation,
+            Clock clock) {
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (sameAccount(initiation.debtorIban(), initiation.creditorIban())) {</span>
+<span class="fc" id="L54">            throw new BusinessRuleViolationException(&quot;debtor and creditor accounts must differ&quot;);</span>
+        }
+<span class="fc" id="L56">        LocalDate today = LocalDate.now(clock);</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (initiation.requestedExecutionDate().isBefore(today)) {</span>
+<span class="fc" id="L58">            throw new BusinessRuleViolationException(&quot;requestedExecutionDate must not be in the past&quot;);</span>
+        }
+<span class="fc" id="L60">        Instant now = clock.instant();</span>
+<span class="fc" id="L61">        return new PaymentOrder(</span>
+                id,
+<span class="fc" id="L63">                initiation.externalReference(),</span>
+<span class="fc" id="L64">                initiation.debtorIban(),</span>
+<span class="fc" id="L65">                initiation.creditorIban(),</span>
+<span class="fc" id="L66">                initiation.money(),</span>
+<span class="fc" id="L67">                initiation.remittance(),</span>
+<span class="fc" id="L68">                initiation.requestedExecutionDate(),</span>
+                PaymentOrderStatus.RECEIVED,
+                now,
+                now);
+    }
+
+    private static boolean sameAccount(Iban a, Iban b) {
+<span class="fc" id="L75">        return a.value().equalsIgnoreCase(b.value());</span>
+    }
+
+    public PaymentOrderId id() {
+<span class="fc" id="L79">        return id;</span>
+    }
+
+    public ExternalReference externalReference() {
+<span class="fc" id="L83">        return externalReference;</span>
+    }
+
+    public Iban debtorIban() {
+<span class="fc" id="L87">        return debtorIban;</span>
+    }
+
+    public Iban creditorIban() {
+<span class="fc" id="L91">        return creditorIban;</span>
+    }
+
+    public Money money() {
+<span class="fc" id="L95">        return money;</span>
+    }
+
+    public Optional&lt;RemittanceInfo&gt; remittance() {
+<span class="fc" id="L99">        return remittance;</span>
+    }
+
+    public LocalDate requestedExecutionDate() {
+<span class="fc" id="L103">        return requestedExecutionDate;</span>
+    }
+
+    public PaymentOrderStatus status() {
+<span class="fc" id="L107">        return status;</span>
+    }
+
+    public Instant createdAt() {
+<span class="fc" id="L111">        return createdAt;</span>
+    }
+
+    public Instant statusChangedAt() {
+<span class="fc" id="L115">        return statusChangedAt;</span>
+    }
+
+    public void replaceStatus(PaymentOrderStatus newStatus, Clock clock) {
+<span class="fc" id="L119">        this.status = newStatus;</span>
+<span class="fc" id="L120">        this.statusChangedAt = clock.instant();</span>
+<span class="fc" id="L121">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

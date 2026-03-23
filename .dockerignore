@@ -1,0 +1,10 @@
+# Build context reducido (Maven descarga deps dentro del contenedor)
+target/
+.git/
+.gitignore
+.idea/
+*.iml
+.vscode/
+**/node_modules/
+*.md
+!README.md

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InMemoryPaymentOrderRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">payment-initiation-service</a> &gt; <a href="index.source.html" class="el_package">com.hiberius.paymentinitiation.adapter.out.persistence</a> &gt; <span class="el_source">InMemoryPaymentOrderRepository.java</span></div><h1>InMemoryPaymentOrderRepository.java</h1><pre class="source lang-java linenums">package com.hiberius.paymentinitiation.adapter.out.persistence;
+
+import com.hiberius.paymentinitiation.domain.model.PaymentOrder;
+import com.hiberius.paymentinitiation.domain.model.PaymentOrderId;
+import com.hiberius.paymentinitiation.port.out.PaymentOrderRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Repository
+<span class="fc" id="L13">public class InMemoryPaymentOrderRepository implements PaymentOrderRepository {</span>
+
+<span class="fc" id="L15">    private final Map&lt;String, PaymentOrder&gt; store = new ConcurrentHashMap&lt;&gt;();</span>
+
+    @Override
+    public void save(PaymentOrder order) {
+<span class="fc" id="L19">        store.put(order.id().value(), order);</span>
+<span class="fc" id="L20">    }</span>
+
+    @Override
+    public Optional&lt;PaymentOrder&gt; findById(PaymentOrderId id) {
+<span class="fc" id="L24">        return Optional.ofNullable(store.get(id.value()));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

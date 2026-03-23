@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaymentOrderController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">payment-initiation-service</a> &gt; <a href="index.source.html" class="el_package">com.hiberius.paymentinitiation.adapter.in.web</a> &gt; <span class="el_source">PaymentOrderController.java</span></div><h1>PaymentOrderController.java</h1><pre class="source lang-java linenums">package com.hiberius.paymentinitiation.adapter.in.web;
+
+import com.hiberius.paymentinitiation.domain.model.PaymentOrderId;
+import com.hiberius.paymentinitiation.generated.api.PaymentOrderApi;
+import com.hiberius.paymentinitiation.generated.model.PaymentOrderCreationResponse;
+import com.hiberius.paymentinitiation.generated.model.PaymentOrderInitiationRequest;
+import com.hiberius.paymentinitiation.port.in.CreatePaymentOrderUseCase;
+import com.hiberius.paymentinitiation.port.in.GetPaymentOrderStatusUseCase;
+import com.hiberius.paymentinitiation.port.in.GetPaymentOrderUseCase;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
+
+@RestController
+public class PaymentOrderController implements PaymentOrderApi {
+
+    private final CreatePaymentOrderUseCase createPaymentOrderUseCase;
+    private final GetPaymentOrderUseCase getPaymentOrderUseCase;
+    private final GetPaymentOrderStatusUseCase getPaymentOrderStatusUseCase;
+    private final PaymentOrderApiMapper mapper;
+
+    public PaymentOrderController(
+            CreatePaymentOrderUseCase createPaymentOrderUseCase,
+            GetPaymentOrderUseCase getPaymentOrderUseCase,
+            GetPaymentOrderStatusUseCase getPaymentOrderStatusUseCase,
+<span class="fc" id="L30">            PaymentOrderApiMapper mapper) {</span>
+<span class="fc" id="L31">        this.createPaymentOrderUseCase = createPaymentOrderUseCase;</span>
+<span class="fc" id="L32">        this.getPaymentOrderUseCase = getPaymentOrderUseCase;</span>
+<span class="fc" id="L33">        this.getPaymentOrderStatusUseCase = getPaymentOrderStatusUseCase;</span>
+<span class="fc" id="L34">        this.mapper = mapper;</span>
+<span class="fc" id="L35">    }</span>
+
+    /**
+     * POST /payment-initiation/payment-orders — contract: 201 + body {@link PaymentOrderCreationResponse} + {@code Location}.
+     */
+    @Override
+    public ResponseEntity&lt;PaymentOrderCreationResponse&gt; createPaymentOrder(
+            PaymentOrderInitiationRequest paymentOrderInitiationRequest) {
+<span class="fc" id="L43">        var order = createPaymentOrderUseCase.create(mapper.toDomain(paymentOrderInitiationRequest));</span>
+<span class="fc" id="L44">        PaymentOrderCreationResponse body = mapper.toCreationResponse(order);</span>
+<span class="fc" id="L45">        URI location = ServletUriComponentsBuilder.fromCurrentContextPath()</span>
+<span class="fc" id="L46">                .path(&quot;/payment-initiation/payment-orders/{id}&quot;)</span>
+<span class="fc" id="L47">                .buildAndExpand(order.id().value())</span>
+<span class="fc" id="L48">                .toUri();</span>
+<span class="fc" id="L49">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="fc" id="L50">                .header(HttpHeaders.LOCATION, location.toASCIIString())</span>
+<span class="fc" id="L51">                .body(body);</span>
+    }
+
+    /**
+     * GET /payment-initiation/payment-orders/{paymentOrderId} — loads domain aggregate via {@link GetPaymentOrderUseCase},
+     * maps to OpenAPI {@link com.hiberius.paymentinitiation.generated.model.PaymentOrder}. Not found →
+     * {@link com.hiberius.paymentinitiation.domain.exception.PaymentOrderNotFoundException} → 404 (handled globally).
+     */
+    @Override
+    public ResponseEntity&lt;com.hiberius.paymentinitiation.generated.model.PaymentOrder&gt; getPaymentOrderById(
+            String paymentOrderId) {
+<span class="fc" id="L62">        var order = getPaymentOrderUseCase.get(PaymentOrderId.of(paymentOrderId));</span>
+<span class="fc" id="L63">        return ResponseEntity.ok(mapper.toApi(order));</span>
+    }
+
+    /**
+     * GET /payment-initiation/payment-orders/{paymentOrderId}/status — projection only; not found uses the same
+     * exception path as full GET via {@link GetPaymentOrderUseCase} (through {@link GetPaymentOrderStatusUseCase}).
+     */
+    @Override
+    public ResponseEntity&lt;com.hiberius.paymentinitiation.generated.model.PaymentOrderStatusView&gt; getPaymentOrderStatus(
+            String paymentOrderId) {
+<span class="fc" id="L73">        var snapshot = getPaymentOrderStatusUseCase.load(PaymentOrderId.of(paymentOrderId));</span>
+<span class="fc" id="L74">        return ResponseEntity.ok(mapper.toStatusView(snapshot));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Filtros SpotBugs: excluir código generado y, si hace falta, suprimir falsos positivos puntuales.
+  Añadir <Match> solo con justificación (clase/método y bug code).
+  Referencia códigos: https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html
+-->
+<FindBugsFilter>
+  <!-- OpenAPI Generator: no analizar -->
+  <Match>
+    <Package name="~com\.hiberius\.paymentinitiation\.generated\..*"/>
+  </Match>
+
+  <!-- Ejemplos si aparecen falsos positivos frecuentes (descomentar y ajustar):
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP"/>
+    <Class name="com.example.SomeDto"/>
+  </Match>
+  <Match>
+    <Bug pattern="SPRING_CSRF_PROTECTION_DISABLED"/>
+    <Class name="~.*SecurityConfig"/>
+  </Match>
+  -->
+</FindBugsFilter>

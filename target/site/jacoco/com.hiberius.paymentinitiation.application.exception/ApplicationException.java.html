@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApplicationException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">payment-initiation-service</a> &gt; <a href="index.source.html" class="el_package">com.hiberius.paymentinitiation.application.exception</a> &gt; <span class="el_source">ApplicationException.java</span></div><h1>ApplicationException.java</h1><pre class="source lang-java linenums">package com.hiberius.paymentinitiation.application.exception;
+
+/**
+ * Application-layer error (orchestration, ports, policies not expressible as pure domain rules).
+ * Default HTTP status is 422; callers may override for conflicts (409) or other 4xx as needed.
+ */
+public class ApplicationException extends RuntimeException {
+
+    private final int httpStatus;
+    private final String errorCode;
+
+    public ApplicationException(String message) {
+<span class="fc" id="L13">        this(message, 422, &quot;APPLICATION_ERROR&quot;);</span>
+<span class="fc" id="L14">    }</span>
+
+    public ApplicationException(String message, Throwable cause) {
+<span class="nc" id="L17">        this(message, 422, &quot;APPLICATION_ERROR&quot;, cause);</span>
+<span class="nc" id="L18">    }</span>
+
+    public ApplicationException(String message, int httpStatus, String errorCode) {
+<span class="fc" id="L21">        super(message);</span>
+<span class="fc" id="L22">        this.httpStatus = httpStatus;</span>
+<span class="fc" id="L23">        this.errorCode = errorCode;</span>
+<span class="fc" id="L24">    }</span>
+
+    public ApplicationException(String message, int httpStatus, String errorCode, Throwable cause) {
+<span class="nc" id="L27">        super(message, cause);</span>
+<span class="nc" id="L28">        this.httpStatus = httpStatus;</span>
+<span class="nc" id="L29">        this.errorCode = errorCode;</span>
+<span class="nc" id="L30">    }</span>
+
+    public int httpStatus() {
+<span class="fc" id="L33">        return httpStatus;</span>
+    }
+
+    public String errorCode() {
+<span class="fc" id="L37">        return errorCode;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

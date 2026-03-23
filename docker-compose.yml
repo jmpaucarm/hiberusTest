@@ -1,0 +1,20 @@
+# Microservicio Payment Initiation — puerto HTTP 8080 (ver application.yml)
+services:
+  payment-initiation:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hiberius/payment-initiation-service:local
+    container_name: payment-initiation-service
+    ports:
+      # host:contenedor — API REST y Actuator en el mismo puerto
+      - "8080:8080"
+    environment:
+      SPRING_APPLICATION_NAME: payment-initiation-service
+      # Opcional: JAVA_OPTS=-Xmx256m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 50s

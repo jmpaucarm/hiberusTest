@@ -1,0 +1,12 @@
+README.md
+pom.xml
+src/main/java/com/hiberius/paymentinitiation/generated/api/ApiUtil.java
+src/main/java/com/hiberius/paymentinitiation/generated/api/PaymentOrderApi.java
+src/main/java/com/hiberius/paymentinitiation/generated/model/AccountReference.java
+src/main/java/com/hiberius/paymentinitiation/generated/model/InstructedAmount.java
+src/main/java/com/hiberius/paymentinitiation/generated/model/PaymentOrder.java
+src/main/java/com/hiberius/paymentinitiation/generated/model/PaymentOrderCreationResponse.java
+src/main/java/com/hiberius/paymentinitiation/generated/model/PaymentOrderInitiationRequest.java
+src/main/java/com/hiberius/paymentinitiation/generated/model/PaymentOrderStatus.java
+src/main/java/com/hiberius/paymentinitiation/generated/model/PaymentOrderStatusView.java
+src/main/java/com/hiberius/paymentinitiation/generated/model/ProblemDetails.java

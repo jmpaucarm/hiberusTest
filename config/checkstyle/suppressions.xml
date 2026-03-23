@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+<suppressions>
+  <!-- Tests: líneas largas (JSON embebido, nombres descriptivos) -->
+  <suppress checks="LineLength" files="[/\\]src[/\\]test[/\\]java[/\\]"/>
+  <!-- OpenAPI / generado no está en src; por si se añade copia local -->
+  <suppress checks=".*" files="[/\\]generated[/\\]"/>
+</suppressions>
